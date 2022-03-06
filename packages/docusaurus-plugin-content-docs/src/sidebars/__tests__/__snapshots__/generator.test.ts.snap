@@ -116,7 +116,7 @@ Array [
         "type": "doc",
       },
     ],
-    "label": "subsubsubfolder3 (_category_.json label)",
+    "label": "Subsubsubfolder category label",
     "link": Object {
       "id": "doc1",
       "type": "doc",
