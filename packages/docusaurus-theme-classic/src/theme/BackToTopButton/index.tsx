@@ -5,14 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import clsx from 'clsx';
 import {translate} from '@docusaurus/Translate';
-import {ThemeClassNames, useBackToTopButton} from '@docusaurus/theme-common';
+import {ThemeClassNames} from '@docusaurus/theme-common';
+import {useBackToTopButton} from '@docusaurus/theme-common/internal';
 
 import styles from './styles.module.css';
 
-export default function BackToTopButton(): JSX.Element {
+export default function BackToTopButton(): ReactNode {
   const {shown, scrollToTop} = useBackToTopButton({threshold: 300});
   return (
     <button

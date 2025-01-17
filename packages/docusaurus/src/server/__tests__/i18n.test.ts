@@ -32,62 +32,72 @@ describe('defaultLocaleConfig', () => {
       direction: 'ltr',
       htmlLang: 'fr',
       calendar: 'gregory',
+      path: 'fr',
     });
     expect(getDefaultLocaleConfig('fr-FR')).toEqual({
       label: 'Français (France)',
       direction: 'ltr',
       htmlLang: 'fr-FR',
       calendar: 'gregory',
+      path: 'fr-FR',
     });
     expect(getDefaultLocaleConfig('en')).toEqual({
       label: 'English',
       direction: 'ltr',
       htmlLang: 'en',
       calendar: 'gregory',
+      path: 'en',
     });
     expect(getDefaultLocaleConfig('en-US')).toEqual({
       label: 'American English',
       direction: 'ltr',
       htmlLang: 'en-US',
       calendar: 'gregory',
+      path: 'en-US',
     });
     expect(getDefaultLocaleConfig('zh')).toEqual({
       label: '中文',
       direction: 'ltr',
       htmlLang: 'zh',
       calendar: 'gregory',
+      path: 'zh',
     });
     expect(getDefaultLocaleConfig('zh-CN')).toEqual({
       label: '中文（中国）',
       direction: 'ltr',
       htmlLang: 'zh-CN',
       calendar: 'gregory',
+      path: 'zh-CN',
     });
     expect(getDefaultLocaleConfig('en-US')).toEqual({
       label: 'American English',
       direction: 'ltr',
       htmlLang: 'en-US',
       calendar: 'gregory',
+      path: 'en-US',
     });
     expect(getDefaultLocaleConfig('fa')).toEqual({
       // cSpell:ignore فارسی
       label: 'فارسی',
       direction: 'rtl',
       htmlLang: 'fa',
-      calendar: 'gregory',
+      calendar: 'persian',
+      path: 'fa',
     });
     expect(getDefaultLocaleConfig('fa-IR')).toEqual({
       // cSpell:ignore ایران فارسیا
       label: 'فارسی (ایران)',
       direction: 'rtl',
       htmlLang: 'fa-IR',
-      calendar: 'gregory',
+      calendar: 'persian',
+      path: 'fa-IR',
     });
     expect(getDefaultLocaleConfig('en-US-u-ca-buddhist')).toEqual({
       label: 'American English',
       direction: 'ltr',
       htmlLang: 'en-US-u-ca-buddhist',
       calendar: 'buddhist',
+      path: 'en-US-u-ca-buddhist',
     });
   });
 });
@@ -170,6 +180,7 @@ describe('loadI18n', () => {
           direction: 'ltr',
           htmlLang: 'fr',
           calendar: 'gregory',
+          path: 'fr',
         },
         en: getDefaultLocaleConfig('en'),
         de: getDefaultLocaleConfig('de'),

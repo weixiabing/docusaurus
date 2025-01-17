@@ -1,8 +1,8 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "references": [{"path": "./tsconfig.build.json"}],
   "compilerOptions": {
-    "module": "esnext",
+    "rootDir": ".",
     "noEmit": true,
     "checkJs": true
   },

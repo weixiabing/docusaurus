@@ -5,13 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React, {useMemo} from 'react';
+import React, {type ReactNode, useMemo} from 'react';
+import {useThemeConfig} from '@docusaurus/theme-common';
 import {
-  type TOCHighlightConfig,
-  useThemeConfig,
   useTOCHighlight,
   useFilteredAndTreeifiedTOC,
-} from '@docusaurus/theme-common';
+  type TOCHighlightConfig,
+} from '@docusaurus/theme-common/internal';
 import TOCItemTree from '@theme/TOCItems/Tree';
 import type {Props} from '@theme/TOCItems';
 
@@ -23,7 +23,7 @@ export default function TOCItems({
   minHeadingLevel: minHeadingLevelOption,
   maxHeadingLevel: maxHeadingLevelOption,
   ...props
-}: Props): JSX.Element | null {
+}: Props): ReactNode {
   const themeConfig = useThemeConfig();
 
   const minHeadingLevel =

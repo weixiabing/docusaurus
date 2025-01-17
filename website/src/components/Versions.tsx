@@ -12,9 +12,12 @@ import React, {
   useRef,
   type ReactNode,
 } from 'react';
-import {useDocsPreferredVersion} from '@docusaurus/theme-common';
-import {useVersions} from '@docusaurus/plugin-content-docs/client';
+import {
+  useVersions,
+  useDocsPreferredVersion,
+} from '@docusaurus/plugin-content-docs/client';
 import Translate from '@docusaurus/Translate';
+import Link from '@docusaurus/Link';
 import CodeBlock from '@theme/CodeBlock';
 
 type ContextValue = {
@@ -24,11 +27,7 @@ type ContextValue = {
 
 const Context = React.createContext<ContextValue | null>(null);
 
-export function VersionsProvider({
-  children,
-}: {
-  children: ReactNode;
-}): JSX.Element {
+export function VersionsProvider({children}: {children: ReactNode}): ReactNode {
   const [canaryVersion, setCanaryVersion] = useState<ContextValue | null>(null);
   const mounted = useRef(true);
   useEffect(() => {
@@ -67,7 +66,7 @@ function useStableVersion(): string {
     : lastVersion;
 }
 
-export function CanaryVersion(): JSX.Element {
+export function CanaryVersion(): ReactNode {
   const canaryVersion = useContext(Context);
   // Show a sensible name
   return canaryVersion ? (
@@ -87,9 +86,46 @@ export function CanaryVersion(): JSX.Element {
   );
 }
 
-export function StableVersion(): JSX.Element {
+export function StableVersion(): ReactNode {
   const currentVersion = useStableVersion();
   return <span>{currentVersion}</span>;
+}
+
+// TODO temporary: assumes main is already on v3 (not the case yet)
+function useNextMajorVersionNumber(): number {
+  return 3; // TODO later read from main@package.json or something...
+}
+function useStableMajorVersionNumber(): number {
+  // -1 because website is published from main, which is the next version
+  return useNextMajorVersionNumber() - 1;
+}
+
+export function NextMajorVersion(): ReactNode {
+  const majorVersionNumber = useNextMajorVersionNumber();
+  return <span>{majorVersionNumber}</span>;
+}
+
+export function StableMajorVersion(): ReactNode {
+  const majorVersionNumber = useStableMajorVersionNumber();
+  return <span>{majorVersionNumber}</span>;
+}
+
+function GitBranchLink({branch}: {branch: string}): ReactNode {
+  return (
+    <Link to={`https://github.com/facebook/docusaurus/tree/${branch}`}>
+      <code>{branch}</code>
+    </Link>
+  );
+}
+
+export function StableMajorBranchLink(): ReactNode {
+  const majorVersionNumber = useStableMajorVersionNumber();
+  const branch = `docusaurus-v${majorVersionNumber}`;
+  return <GitBranchLink branch={branch} />;
+}
+
+export function NextMajorBranchLink(): ReactNode {
+  return <GitBranchLink branch="main" />;
 }
 
 export function InsertIfCanaryVersionUnknown({
@@ -116,7 +152,7 @@ export function InsertIfCanaryVersionKnown({
   return null;
 }
 
-export function PackageJSONDiff(): JSX.Element {
+export function PackageJSONDiff(): ReactNode {
   const canaryVersion = useContext(Context)?.name ?? '0.0.0-4922';
   const stableVersion = useStableVersion();
   return (
@@ -130,7 +166,7 @@ export function PackageJSONDiff(): JSX.Element {
   );
 }
 
-export function PublishTime(): JSX.Element | null {
+export function PublishTime(): ReactNode {
   const time = useContext(Context)?.time;
   if (!time) {
     return null;

@@ -17,7 +17,7 @@ import {
   readVersionsFile,
 } from './versions/files';
 import {validateVersionName} from './versions/validation';
-import {loadSidebarsFileUnsafe} from './sidebars';
+import {loadSidebarsFile} from './sidebars';
 import {CURRENT_VERSION_NAME} from './constants';
 import type {PluginOptions} from '@docusaurus/plugin-content-docs';
 import type {LoadContext} from '@docusaurus/types';
@@ -37,7 +37,7 @@ async function createVersionedSidebarFile({
   // Note: we don't need the sidebars file to be normalized: it's ok to let
   // plugin option changes to impact older, versioned sidebars
   // We don't validate here, assuming the user has already built the version
-  const sidebars = await loadSidebarsFileUnsafe(sidebarPath);
+  const sidebars = await loadSidebarsFile(sidebarPath);
 
   // Do not create a useless versioned sidebars file if sidebars file is empty
   // or sidebars are disabled/false)
@@ -53,7 +53,7 @@ async function createVersionedSidebarFile({
 }
 
 // Tests depend on non-default export for mocking.
-export async function cliDocsVersionCommand(
+async function cliDocsVersionCommand(
   version: unknown,
   {id: pluginId, path: docsPath, sidebarPath}: PluginOptions,
   {siteDir, i18n}: LoadContext,
@@ -85,9 +85,11 @@ export async function cliDocsVersionCommand(
 
   await Promise.all(
     i18n.locales.map(async (locale) => {
-      // TODO duplicated logic from core, so duplicate comment as well: we need
-      // to support customization per-locale in the future
-      const localizationDir = path.resolve(siteDir, i18n.path, locale);
+      const localizationDir = path.resolve(
+        siteDir,
+        i18n.path,
+        i18n.localeConfigs[locale]!.path,
+      );
       // Copy docs files.
       const docsDir =
         locale === i18n.defaultLocale
@@ -140,3 +142,17 @@ export async function cliDocsVersionCommand(
 
   logger.success`name=${pluginIdLogPrefix}: version name=${version} created!`;
 }
+
+// TODO try to remove this workaround
+// Why use a default export instead of named exports here?
+// This is only to make Jest mocking happy
+// After upgrading Jest/SWC we got this weird mocking error in extendCli tests
+// "spyOn: Cannot redefine property cliDocsVersionCommand"
+// I tried various workarounds, and it's the only one that worked :/
+// See also:
+// - https://pyk.sh/fixing-typeerror-cannot-redefine-property-x-error-in-jest-tests#heading-solution-2-using-barrel-imports
+// - https://github.com/aelbore/esbuild-jest/issues/26
+// - https://stackoverflow.com/questions/67872622/jest-spyon-not-working-on-index-file-cannot-redefine-property/69951703#69951703
+export default {
+  cliDocsVersionCommand,
+};

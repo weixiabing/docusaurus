@@ -30,7 +30,6 @@ function createSampleDoc(doc: Pick<DocMetadata, 'id'>): DocMetadata {
     permalink: 'any',
     slug: 'any',
     source: 'any',
-    unversionedId: 'any',
     version: 'any',
     title: `${doc.id} title`,
     frontMatter: {
@@ -86,6 +85,8 @@ function createSampleVersion(
             {
               type: 'doc',
               id: 'doc2',
+              label: 'Second doc translatable',
+              translatable: true,
             },
             {
               type: 'link',
@@ -109,8 +110,10 @@ function createSampleVersion(
           id: 'doc4',
         },
         {
-          type: 'doc',
+          type: 'ref',
           id: 'doc5',
+          label: 'Fifth doc translatable',
+          translatable: true,
         },
       ],
     },

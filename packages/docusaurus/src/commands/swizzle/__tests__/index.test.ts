@@ -28,7 +28,7 @@ async function createTestSiteConfig(siteDir: string) {
 module.exports = {
   title: 'My Site',
   tagline: 'Dinosaurs are cool',
-  url: 'https://your-docusaurus-test-site.com',
+  url: 'https://your-docusaurus-site.example.com',
   baseUrl: '/',
   themes: [
     function fixtureTheme() {
@@ -111,10 +111,11 @@ async function createTestSite() {
     component: string;
     typescript?: boolean;
   }) {
-    return swizzleWithExit(siteDir, FixtureThemeName, component, {
+    return swizzleWithExit(FixtureThemeName, component, siteDir, {
       wrap: true,
       danger: true,
       typescript,
+      javascript: !typescript,
     });
   }
 
@@ -125,10 +126,11 @@ async function createTestSite() {
     component: string;
     typescript?: boolean;
   }) {
-    return swizzleWithExit(siteDir, FixtureThemeName, component, {
+    return swizzleWithExit(FixtureThemeName, component, siteDir, {
       eject: true,
       danger: true,
       typescript,
+      javascript: !typescript,
     });
   }
 

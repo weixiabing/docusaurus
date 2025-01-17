@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import Link from '@docusaurus/Link';
 import {useActiveVersion} from '@docusaurus/plugin-content-docs/client';
 import Translate, {translate} from '@docusaurus/Translate';
@@ -19,12 +19,14 @@ type Props = {
   presetOptionName: string;
 };
 
+const docsPluginId = undefined; // Default docs plugin instance
+
 export default function ConfigTabs({
   code,
   pluginName,
   presetOptionName,
-}: Props): JSX.Element {
-  const versionPath = useActiveVersion()!.path;
+}: Props): ReactNode {
+  const versionPath = useActiveVersion(docsPluginId)!.path;
 
   return (
     <Tabs groupId="api-config-ex">
@@ -45,9 +47,8 @@ export default function ConfigTabs({
             }
           </Translate>
         </p>
-        <p>
-          <CodeBlock language="js" title="docusaurus.config.js">
-            {`module.exports = {
+        <CodeBlock language="js" title="docusaurus.config.js">
+          {`module.exports = {
   presets: [
     [
       '@docusaurus/preset-classic',
@@ -59,8 +60,7 @@ export default function ConfigTabs({
     ],
   ],
 };`}
-          </CodeBlock>
-        </p>
+        </CodeBlock>
       </TabItem>
       <TabItem value="plugin" label={translate({message: 'Plugin options'})}>
         <p>
@@ -69,9 +69,8 @@ export default function ConfigTabs({
             the plugin:
           </Translate>
         </p>
-        <p>
-          <CodeBlock language="js" title="docusaurus.config.js">
-            {`module.exports = {
+        <CodeBlock language="js" title="docusaurus.config.js">
+          {`module.exports = {
   plugins: [
     [
       '${pluginName}',
@@ -81,8 +80,7 @@ export default function ConfigTabs({
     ],
   ],
 };`}
-          </CodeBlock>
-        </p>
+        </CodeBlock>
       </TabItem>
     </Tabs>
   );

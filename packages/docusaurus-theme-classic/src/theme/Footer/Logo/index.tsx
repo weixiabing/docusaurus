@@ -5,7 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, {type ReactNode} from 'react';
+import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import {useBaseUrlUtils} from '@docusaurus/useBaseUrl';
 import ThemedImage from '@theme/ThemedImage';
@@ -21,16 +22,17 @@ function LogoImage({logo}: Props) {
   };
   return (
     <ThemedImage
-      className="footer__logo"
+      className={clsx('footer__logo', logo.className)}
       alt={logo.alt}
       sources={sources}
       width={logo.width}
       height={logo.height}
+      style={logo.style}
     />
   );
 }
 
-export default function FooterLogo({logo}: Props): JSX.Element {
+export default function FooterLogo({logo}: Props): ReactNode {
   return logo.href ? (
     <Link
       href={logo.href}

@@ -8,12 +8,12 @@
 import fs from 'fs-extra';
 import logger from '@docusaurus/logger';
 import {
+  safeGlobby,
   writeMarkdownHeadingId,
   type WriteHeadingIDOptions,
 } from '@docusaurus/utils';
-import {loadContext} from '../server';
+import {loadContext} from '../server/site';
 import {initPlugins} from '../server/plugins/init';
-import {safeGlobby} from '../server/utils';
 
 async function transformMarkdownFile(
   filepath: string,
@@ -41,10 +41,12 @@ async function getPathsToWatch(siteDir: string): Promise<string[]> {
 }
 
 export async function writeHeadingIds(
-  siteDir: string,
-  files: string[] | undefined,
-  options: WriteHeadingIDOptions,
+  siteDirParam: string = '.',
+  files: string[] = [],
+  options: WriteHeadingIDOptions = {},
 ): Promise<void> {
+  const siteDir = await fs.realpath(siteDirParam);
+
   const markdownFiles = await safeGlobby(
     files ?? (await getPathsToWatch(siteDir)),
     {

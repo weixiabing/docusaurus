@@ -11,7 +11,7 @@ import type {PluginOptions} from './options';
 /**
  * The minimal infos the plugin needs to work
  */
-export type PluginContext = Pick<Props, 'outDir' | 'baseUrl'> & {
+export type PluginContext = Pick<Props, 'outDir' | 'baseUrl' | 'siteConfig'> & {
   options: PluginOptions;
   relativeRoutesPaths: string[];
 };
@@ -21,7 +21,7 @@ export type PluginContext = Pick<Props, 'outDir' | 'baseUrl'> & {
  * /!\ easy to be confused: "from" is the new page we should create,
  * that redirects to "to": the existing Docusaurus page
  */
-export type RedirectMetadata = {
+export type RedirectItem = {
   /** Pathname of the new page we should create */
   from: string;
   /** Pathname of an existing Docusaurus page */

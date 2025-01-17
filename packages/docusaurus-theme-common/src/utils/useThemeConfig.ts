@@ -20,15 +20,19 @@ export type NavbarItem = {
   position?: 'left' | 'right';
 } & {[key: string]: unknown};
 
-export type NavbarLogo = {
+type BaseLogo = {
+  alt?: string;
   src: string;
   srcDark?: string;
+  href?: string;
   width?: string | number;
   height?: string | number;
-  href?: string;
   target?: string;
-  alt?: string;
+  style?: object;
+  className?: string;
 };
+
+export type NavbarLogo = BaseLogo;
 
 // TODO improve
 export type Navbar = {
@@ -63,21 +67,20 @@ export type PrismConfig = {
 
 export type FooterLinkItem = {
   label?: string;
+  className?: string;
   to?: string;
   href?: string;
   html?: string;
   prependBaseUrlToHref?: string;
 } & {[key: string]: unknown};
 
-export type FooterLogo = {
-  alt?: string;
-  src: string;
-  srcDark?: string;
-  width?: string | number;
-  height?: string | number;
-  target?: string;
-  href?: string;
+export type FooterColumnItem = {
+  title: string | null;
+  className?: string;
+  items: FooterLinkItem[];
 };
+
+export type FooterLogo = BaseLogo;
 
 export type FooterBase = {
   style: 'light' | 'dark';
@@ -86,10 +89,7 @@ export type FooterBase = {
 };
 
 export type MultiColumnFooter = FooterBase & {
-  links: {
-    title: string | null;
-    items: FooterLinkItem[];
-  }[];
+  links: FooterColumnItem[];
 };
 
 export type SimpleFooter = FooterBase & {
@@ -110,6 +110,12 @@ export type ThemeConfig = {
     sidebar: {
       hideable: boolean;
       autoCollapseCategories: boolean;
+    };
+  };
+
+  blog: {
+    sidebar: {
+      groupByYear: boolean;
     };
   };
 

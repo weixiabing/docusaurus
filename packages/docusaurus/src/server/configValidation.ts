@@ -6,11 +6,27 @@
  */
 
 import {
+  DEFAULT_PARSE_FRONT_MATTER,
   DEFAULT_STATIC_DIR_NAME,
   DEFAULT_I18N_DIR_NAME,
 } from '@docusaurus/utils';
-import {Joi, URISchema, printWarning} from '@docusaurus/utils-validation';
-import type {DocusaurusConfig, I18nConfig} from '@docusaurus/types';
+import {Joi, printWarning} from '@docusaurus/utils-validation';
+import {
+  addTrailingSlash,
+  addLeadingSlash,
+  removeTrailingSlash,
+} from '@docusaurus/utils-common';
+import type {
+  FasterConfig,
+  FutureConfig,
+  FutureV4Config,
+  StorageConfig,
+} from '@docusaurus/types/src/config';
+import type {
+  DocusaurusConfig,
+  I18nConfig,
+  MarkdownConfig,
+} from '@docusaurus/types';
 
 const DEFAULT_I18N_LOCALE = 'en';
 
@@ -21,15 +37,74 @@ export const DEFAULT_I18N_CONFIG: I18nConfig = {
   localeConfigs: {},
 };
 
+export const DEFAULT_STORAGE_CONFIG: StorageConfig = {
+  type: 'localStorage',
+  namespace: false,
+};
+
+export const DEFAULT_FASTER_CONFIG: FasterConfig = {
+  swcJsLoader: false,
+  swcJsMinimizer: false,
+  swcHtmlMinimizer: false,
+  lightningCssMinimizer: false,
+  mdxCrossCompilerCache: false,
+  rspackBundler: false,
+};
+
+// When using the "faster: true" shortcut
+export const DEFAULT_FASTER_CONFIG_TRUE: FasterConfig = {
+  swcJsLoader: true,
+  swcJsMinimizer: true,
+  swcHtmlMinimizer: true,
+  lightningCssMinimizer: true,
+  mdxCrossCompilerCache: true,
+  rspackBundler: true,
+};
+
+export const DEFAULT_FUTURE_V4_CONFIG: FutureV4Config = {
+  removeLegacyPostBuildHeadAttribute: false,
+};
+
+// When using the "v4: true" shortcut
+export const DEFAULT_FUTURE_V4_CONFIG_TRUE: FutureV4Config = {
+  removeLegacyPostBuildHeadAttribute: true,
+};
+
+export const DEFAULT_FUTURE_CONFIG: FutureConfig = {
+  v4: DEFAULT_FUTURE_V4_CONFIG,
+  experimental_faster: DEFAULT_FASTER_CONFIG,
+  experimental_storage: DEFAULT_STORAGE_CONFIG,
+  experimental_router: 'browser',
+};
+
+export const DEFAULT_MARKDOWN_CONFIG: MarkdownConfig = {
+  format: 'mdx', // TODO change this to "detect" in Docusaurus v4?
+  mermaid: false,
+  preprocessor: undefined,
+  parseFrontMatter: DEFAULT_PARSE_FRONT_MATTER,
+  mdx1Compat: {
+    comments: true,
+    admonitions: true,
+    headingIds: true,
+  },
+  anchors: {
+    maintainCase: false,
+  },
+  remarkRehypeOptions: undefined,
+};
+
 export const DEFAULT_CONFIG: Pick<
   DocusaurusConfig,
   | 'i18n'
+  | 'future'
   | 'onBrokenLinks'
+  | 'onBrokenAnchors'
   | 'onBrokenMarkdownLinks'
   | 'onDuplicateRoutes'
   | 'plugins'
   | 'themes'
   | 'presets'
+  | 'headTags'
   | 'stylesheets'
   | 'scripts'
   | 'clientModules'
@@ -40,14 +115,18 @@ export const DEFAULT_CONFIG: Pick<
   | 'tagline'
   | 'baseUrlIssueBanner'
   | 'staticDirectories'
+  | 'markdown'
 > = {
   i18n: DEFAULT_I18N_CONFIG,
+  future: DEFAULT_FUTURE_CONFIG,
   onBrokenLinks: 'throw',
+  onBrokenAnchors: 'warn', // TODO Docusaurus v4: change to throw
   onBrokenMarkdownLinks: 'warn',
   onDuplicateRoutes: 'warn',
   plugins: [],
   themes: [],
   presets: [],
+  headTags: [],
   stylesheets: [],
   scripts: [],
   clientModules: [],
@@ -58,27 +137,26 @@ export const DEFAULT_CONFIG: Pick<
   tagline: '',
   baseUrlIssueBanner: true,
   staticDirectories: [DEFAULT_STATIC_DIR_NAME],
+  markdown: DEFAULT_MARKDOWN_CONFIG,
 };
 
 function createPluginSchema(theme: boolean) {
-  return (
-    Joi.alternatives()
-      .try(
-        Joi.function(),
-        Joi.array()
-          .ordered(Joi.function().required(), Joi.object().required())
-          .length(2),
-        Joi.string(),
-        Joi.array()
-          .ordered(Joi.string().required(), Joi.object().required())
-          .length(2),
-        Joi.any().valid(false, null),
-      )
-      // @ts-expect-error: bad lib def, doesn't recognize an array of reports
-      .error((errors) => {
-        errors.forEach((error) => {
-          const validConfigExample = theme
-            ? `Example valid theme config:
+  return Joi.alternatives()
+    .try(
+      Joi.function(),
+      Joi.array()
+        .ordered(Joi.function().required(), Joi.object().required())
+        .length(2),
+      Joi.string(),
+      Joi.array()
+        .ordered(Joi.string().required(), Joi.object().required())
+        .length(2),
+      Joi.any().valid(false, null),
+    )
+    .error((errors) => {
+      errors.forEach((error) => {
+        const validConfigExample = theme
+          ? `Example valid theme config:
 {
   themes: [
     ["@docusaurus/theme-classic",options],
@@ -88,7 +166,7 @@ function createPluginSchema(theme: boolean) {
     [function myTheme() { },options]
   ],
 };`
-            : `Example valid plugin config:
+          : `Example valid plugin config:
 {
   plugins: [
     ["@docusaurus/plugin-content-docs",options],
@@ -99,17 +177,16 @@ function createPluginSchema(theme: boolean) {
   ],
 };`;
 
-          error.message = ` => Bad Docusaurus ${
-            theme ? 'theme' : 'plugin'
-          } value ${error.path.reduce((acc, cur) =>
-            typeof cur === 'string' ? `${acc}.${cur}` : `${acc}[${cur}]`,
-          )}.
+        error.message = ` => Bad Docusaurus ${
+          theme ? 'theme' : 'plugin'
+        } value ${error.path.reduce((acc, cur) =>
+          typeof cur === 'string' ? `${acc}.${cur}` : `${acc}[${cur}]`,
+        )}.
 ${validConfigExample}
 `;
-        });
-        return errors;
-      })
-  );
+      });
+      return errors;
+    });
 }
 
 const PluginSchema = createPluginSchema(false);
@@ -135,6 +212,7 @@ const LocaleConfigSchema = Joi.object({
   htmlLang: Joi.string(),
   direction: Joi.string().equal('ltr', 'rtl').default('ltr'),
   calendar: Joi.string(),
+  path: Joi.string(),
 });
 
 const I18N_CONFIG_SCHEMA = Joi.object<I18nConfig>({
@@ -148,38 +226,117 @@ const I18N_CONFIG_SCHEMA = Joi.object<I18nConfig>({
   .optional()
   .default(DEFAULT_I18N_CONFIG);
 
-const SiteUrlSchema = URISchema.required().custom((value: unknown, helpers) => {
-  try {
-    const {pathname} = new URL(String(value));
-    if (pathname !== '/') {
-      helpers.warn('docusaurus.configValidationWarning', {
-        warningMessage: `the url is not supposed to contain a sub-path like '${pathname}', please use the baseUrl field for sub-paths`,
-      });
+const FASTER_CONFIG_SCHEMA = Joi.alternatives()
+  .try(
+    Joi.object<FasterConfig>({
+      swcJsLoader: Joi.boolean().default(DEFAULT_FASTER_CONFIG.swcJsLoader),
+      swcJsMinimizer: Joi.boolean().default(
+        DEFAULT_FASTER_CONFIG.swcJsMinimizer,
+      ),
+      swcHtmlMinimizer: Joi.boolean().default(
+        DEFAULT_FASTER_CONFIG.swcHtmlMinimizer,
+      ),
+      lightningCssMinimizer: Joi.boolean().default(
+        DEFAULT_FASTER_CONFIG.lightningCssMinimizer,
+      ),
+      mdxCrossCompilerCache: Joi.boolean().default(
+        DEFAULT_FASTER_CONFIG.mdxCrossCompilerCache,
+      ),
+      rspackBundler: Joi.boolean().default(DEFAULT_FASTER_CONFIG.rspackBundler),
+    }),
+    Joi.boolean()
+      .required()
+      .custom((bool) =>
+        bool ? DEFAULT_FASTER_CONFIG_TRUE : DEFAULT_FASTER_CONFIG,
+      ),
+  )
+  .optional()
+  .default(DEFAULT_FASTER_CONFIG);
+
+const FUTURE_V4_SCHEMA = Joi.alternatives()
+  .try(
+    Joi.object<FutureV4Config>({
+      removeLegacyPostBuildHeadAttribute: Joi.boolean().default(
+        DEFAULT_FUTURE_V4_CONFIG.removeLegacyPostBuildHeadAttribute,
+      ),
+    }),
+    Joi.boolean()
+      .required()
+      .custom((bool) =>
+        bool ? DEFAULT_FUTURE_V4_CONFIG_TRUE : DEFAULT_FUTURE_V4_CONFIG,
+      ),
+  )
+  .optional()
+  .default(DEFAULT_FUTURE_V4_CONFIG);
+
+const STORAGE_CONFIG_SCHEMA = Joi.object({
+  type: Joi.string()
+    .equal('localStorage', 'sessionStorage')
+    .default(DEFAULT_STORAGE_CONFIG.type),
+  namespace: Joi.alternatives()
+    .try(Joi.string(), Joi.boolean())
+    .default(DEFAULT_STORAGE_CONFIG.namespace),
+})
+  .optional()
+  .default(DEFAULT_STORAGE_CONFIG);
+
+const FUTURE_CONFIG_SCHEMA = Joi.object<FutureConfig>({
+  v4: FUTURE_V4_SCHEMA,
+  experimental_faster: FASTER_CONFIG_SCHEMA,
+  experimental_storage: STORAGE_CONFIG_SCHEMA,
+  experimental_router: Joi.string()
+    .equal('browser', 'hash')
+    .default(DEFAULT_FUTURE_CONFIG.experimental_router),
+})
+  .optional()
+  .default(DEFAULT_FUTURE_CONFIG);
+
+const SiteUrlSchema = Joi.string()
+  .required()
+  .custom((value: string, helpers) => {
+    try {
+      const {pathname} = new URL(value);
+      if (pathname !== '/') {
+        return helpers.error('docusaurus.subPathError', {pathname});
+      }
+    } catch {
+      return helpers.error('any.invalid');
     }
-  } catch {}
-  return value;
-}, 'siteUrlCustomValidation');
+    return removeTrailingSlash(value);
+  })
+  .messages({
+    'any.invalid':
+      '"{#value}" does not look like a valid URL. Make sure it has a protocol; for example, "https://example.com".',
+    'docusaurus.subPathError':
+      'The url is not supposed to contain a sub-path like "{#pathname}". Please use the baseUrl field for sub-paths.',
+  });
 
 // TODO move to @docusaurus/utils-validation
 export const ConfigSchema = Joi.object<DocusaurusConfig>({
-  baseUrl: Joi.string()
+  baseUrl: Joi
+    // Weird Joi trick needed, otherwise value '' is not normalized...
+    .alternatives()
+    .try(Joi.string().required().allow(''))
     .required()
-    .regex(/\/$/m)
-    .message('{{#label}} must be a string with a trailing slash.'),
+    .custom((value: string) => addLeadingSlash(addTrailingSlash(value))),
   baseUrlIssueBanner: Joi.boolean().default(DEFAULT_CONFIG.baseUrlIssueBanner),
   favicon: Joi.string().optional(),
   title: Joi.string().required(),
   url: SiteUrlSchema,
   trailingSlash: Joi.boolean(), // No default value! undefined = retrocompatible legacy behavior!
   i18n: I18N_CONFIG_SCHEMA,
+  future: FUTURE_CONFIG_SCHEMA,
   onBrokenLinks: Joi.string()
-    .equal('ignore', 'log', 'warn', 'error', 'throw')
+    .equal('ignore', 'log', 'warn', 'throw')
     .default(DEFAULT_CONFIG.onBrokenLinks),
+  onBrokenAnchors: Joi.string()
+    .equal('ignore', 'log', 'warn', 'throw')
+    .default(DEFAULT_CONFIG.onBrokenAnchors),
   onBrokenMarkdownLinks: Joi.string()
-    .equal('ignore', 'log', 'warn', 'error', 'throw')
+    .equal('ignore', 'log', 'warn', 'throw')
     .default(DEFAULT_CONFIG.onBrokenMarkdownLinks),
   onDuplicateRoutes: Joi.string()
-    .equal('ignore', 'log', 'warn', 'error', 'throw')
+    .equal('ignore', 'log', 'warn', 'throw')
     .default(DEFAULT_CONFIG.onDuplicateRoutes),
   organizationName: Joi.string().allow(''),
   staticDirectories: Joi.array()
@@ -211,6 +368,20 @@ export const ConfigSchema = Joi.object<DocusaurusConfig>({
     })
     .default(DEFAULT_CONFIG.scripts),
   ssrTemplate: Joi.string(),
+  headTags: Joi.array()
+    .items(
+      Joi.object({
+        tagName: Joi.string().required(),
+        attributes: Joi.object()
+          .pattern(/[\w-]+/, Joi.string())
+          .required(),
+      }).unknown(),
+    )
+    .messages({
+      'array.includes':
+        '{#label} is invalid. A headTag must be an object with at least a "tagName" and an "attributes" property.',
+    })
+    .default(DEFAULT_CONFIG.headTags),
   stylesheets: Joi.array()
     .items(
       Joi.string(),
@@ -235,6 +406,40 @@ export const ConfigSchema = Joi.object<DocusaurusConfig>({
       .try(Joi.string().equal('babel'), Joi.function())
       .optional(),
   }).optional(),
+  markdown: Joi.object({
+    format: Joi.string()
+      .equal('mdx', 'md', 'detect')
+      .default(DEFAULT_CONFIG.markdown.format),
+    parseFrontMatter: Joi.function().default(
+      () => DEFAULT_CONFIG.markdown.parseFrontMatter,
+    ),
+    mermaid: Joi.boolean().default(DEFAULT_CONFIG.markdown.mermaid),
+    preprocessor: Joi.function()
+      .arity(1)
+      .optional()
+      .default(() => DEFAULT_CONFIG.markdown.preprocessor),
+    mdx1Compat: Joi.object({
+      comments: Joi.boolean().default(
+        DEFAULT_CONFIG.markdown.mdx1Compat.comments,
+      ),
+      admonitions: Joi.boolean().default(
+        DEFAULT_CONFIG.markdown.mdx1Compat.admonitions,
+      ),
+      headingIds: Joi.boolean().default(
+        DEFAULT_CONFIG.markdown.mdx1Compat.headingIds,
+      ),
+    }).default(DEFAULT_CONFIG.markdown.mdx1Compat),
+    remarkRehypeOptions:
+      // add proper external options validation?
+      // Not sure if it's a good idea, validation is likely to become stale
+      // See https://github.com/remarkjs/remark-rehype#options
+      Joi.object().unknown(),
+    anchors: Joi.object({
+      maintainCase: Joi.boolean().default(
+        DEFAULT_CONFIG.markdown.anchors.maintainCase,
+      ),
+    }).default(DEFAULT_CONFIG.markdown.anchors),
+  }).default(DEFAULT_CONFIG.markdown),
 }).messages({
   'docusaurus.configValidationWarning':
     'Docusaurus config validation warning. Field {#label}: {#warningMessage}',

@@ -5,27 +5,29 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import clsx from 'clsx';
-import {findFirstCategoryLink} from '@docusaurus/theme-common';
+import {
+  useCurrentSidebarSiblings,
+  filterDocCardListItems,
+} from '@docusaurus/plugin-content-docs/client';
 import DocCard from '@theme/DocCard';
 import type {Props} from '@theme/DocCardList';
-import type {PropSidebarItem} from '@docusaurus/plugin-content-docs';
 
-// Filter categories that don't have a link.
-function filterItems(items: PropSidebarItem[]): PropSidebarItem[] {
-  return items.filter((item) => {
-    if (item.type === 'category') {
-      return !!findFirstCategoryLink(item);
-    }
-    return true;
-  });
+function DocCardListForCurrentSidebarCategory({className}: Props) {
+  const items = useCurrentSidebarSiblings();
+  return <DocCardList items={items} className={className} />;
 }
 
-export default function DocCardList({items, className}: Props): JSX.Element {
+export default function DocCardList(props: Props): ReactNode {
+  const {items, className} = props;
+  if (!items) {
+    return <DocCardListForCurrentSidebarCategory {...props} />;
+  }
+  const filteredItems = filterDocCardListItems(items);
   return (
     <section className={clsx('row', className)}>
-      {filterItems(items).map((item, index) => (
+      {filteredItems.map((item, index) => (
         <article key={index} className="col col--6 margin-bottom--lg">
           <DocCard item={item} />
         </article>

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import React, {type ReactNode} from 'react';
 import ComponentTypes from '@theme/NavbarItem/ComponentTypes';
 import type {NavbarItemType, Props} from '@theme/NavbarItem';
 
@@ -18,11 +18,11 @@ function normalizeComponentType(type: NavbarItemType, props: object) {
   return type;
 }
 
-export default function NavbarItem({type, ...props}: Props): JSX.Element {
+export default function NavbarItem({type, ...props}: Props): ReactNode {
   const componentType = normalizeComponentType(type, props);
   const NavbarItemComponent = ComponentTypes[componentType];
   if (!NavbarItemComponent) {
     throw new Error(`No NavbarItem component found for type "${type}".`);
   }
-  return <NavbarItemComponent {...(props as never)} />;
+  return <NavbarItemComponent {...(props as any)} />;
 }
